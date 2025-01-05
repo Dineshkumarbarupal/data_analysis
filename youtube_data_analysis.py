@@ -1,7 +1,11 @@
 from googleapiclient.discovery import build 
 import pandas as pd
 from IPython.display import JSON
-# import json
+from dateutil import parser
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+
 
 api_keys = "AIzaSyC7IItxesghU2QTADvmEZusDD8KebGeFso"
 channel_ids = ['UCeVMnSShP_Iviwkknt83cww']
@@ -85,4 +89,45 @@ def get_video_ids(youtube, playlist_id):
 video_ids = get_video_ids(youtube,playlist_id)
 print(video_ids)
 print(len(video_ids))
+
+def get_video_details(youtube, video_ids):
+    all_video_info = []
+
+    for i in range(0, len(video_ids), 50):
+        request = youtube.videos().list(
+            part="snippet, contentDetails, statistics",
+            id=','.join(video_ids[i:i+50])
+        )
+        response = request.execute()
+
+        stats_to_keep = {
+            'snippet': ['channelTitle', 'title', 'description', 'tags', 'publishedAt'],
+            'statistics': ['viewCount', 'likeCount', 'favouriteCount', 'commentCount'],
+            'contentDetails': ['duration', 'definition', 'caption']
+        }
+
+        for video in response['items']:
+            video_info = {}
+            video_info['video_id'] = video['id']
+
+            for k in stats_to_keep.keys():
+                for v in stats_to_keep[k]:
+                    try:
+                        video_info[v] = video[k][v]
+                    except:
+                        video_info[v] = None
+
+            all_video_info.append(video_info)
+
+    return pd.DataFrame(all_video_info)
+
+videos_data = get_video_details(youtube,video_ids)
+
+# print(videos_data)
+
+
+ax = sns.barplot(x= 'title', y= 'viewCount',data= videos_data.sort_values('viewCount',ascending=False)[0:9])
+# plot = ax.set_xticklabels(ax.get_xticklabels(), rotation=90)
+ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:,.0f} k'.format(x / 1000)))
+plt.show()
 
