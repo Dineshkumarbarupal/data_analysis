@@ -1,3 +1,5 @@
+# exceeded monthly quota
+
 import requests
 import csv
 
@@ -13,8 +15,8 @@ response = requests.get(url, headers=headers, params=querystring)
 
 data = response.json()
 print(data)
+print(type(data))
 
-file_name = "nasdaq_symbols.text"
 
 # with open('output.txt', 'w') as file:   # Save data into text file
 #     for key, value in data.items():
@@ -25,26 +27,18 @@ file_name = "nasdaq_symbols.text"
 #     for key, value in data.items():
 #         writer.writerow([key, value])
 
-if isinstance(data, dict) and "data" in data:
-    symbol_list = data["data"]
-elif isinstance(data, list):
-    symbol_list = data  
-else:
-    symbol_list = [] 
 
-if symbol_list:
-    file_name = "nasdaq_symbols.csv"
+file_name = "nasdaq_symbols.csv"
 
-    with open(file_name, mode="w", newline="", encoding="utf-8") as file:
-        writer = csv.writer(file)
-        writer.writerow(["Code", "Name"]) 
+with open(file_name, mode="w", newline="", encoding="utf-8") as file:
+    writer = csv.writer(file)
+    writer.writerow(["Code", "Name"]) 
 
-        for item in symbol_list:
-            writer.writerow([item.get("code", ""), item.get("name", "")])
+    for item in data:
+        writer.writerow([item.get("code", ""), item.get("name", "")])
 
-    print(f"Data successfully written to {file_name}")
-else:
-    print("No data to write to CSV. Please check the API response.")
+
+
 
 
 
