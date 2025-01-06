@@ -4,6 +4,7 @@ from IPython.display import JSON
 from dateutil import parser
 import seaborn as sns
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 
 
 
@@ -14,28 +15,26 @@ api_service_name = "youtube"
 api_version = "v3"
 
 
-# Get credentials and create an API client
 youtube = build(
     api_service_name, api_version, developerKey=api_keys)
 
-# request = youtube.channels().list(
-#     part="snippet,contentDetails,statistics",
-#     id=",".join(channel_ids)
-# )
-# response = request.execute()
-# print(response)
+request = youtube.channels().list(
+    part="snippet,contentDetails,statistics",
+    id=",".join(channel_ids)
+)
+
+response = request.execute()
+print(response)
 
 def get_channel_stats(youtube, channel_ids):
     all_data = []
 
-    # Create request to get channel details
     request = youtube.channels().list(
         part="snippet,contentDetails,statistics",
         id=",".join(channel_ids)
     )
     response = request.execute()
 
-    # Loop through the items in the response
     for item in response['items']:
         data = {
             'channelName': item['snippet']['title'],
@@ -46,27 +45,24 @@ def get_channel_stats(youtube, channel_ids):
         }
         all_data.append(data)
 
-    # Return data as a Pandas DataFrame
     return pd.DataFrame(all_data)
-# print(response)
+
 
 channel_data = get_channel_stats(youtube,channel_ids)
 print(channel_data)
 
 
-playlist_id = "UUeVMnSShP_Iviwkknt83cww"  # Example playlist ID
+playlist_id = "UUeVMnSShP_Iviwkknt83cww" 
 def get_video_ids(youtube, playlist_id):
     video_ids = []
 
-    # Create request to get playlist items
     request = youtube.playlistItems().list(
         part="snippet,contentDetails",
         playlistId=playlist_id,
         maxResults=50
     )
     response = request.execute()
-
-    # Loop through the items in the response
+    
     for item in response['items']:
         video_ids.append(item['contentDetails']['videoId'])
 
@@ -125,9 +121,12 @@ videos_data = get_video_details(youtube,video_ids)
 
 # print(videos_data)
 
-
-ax = sns.barplot(x= 'title', y= 'viewCount',data= videos_data.sort_values('viewCount',ascending=False)[0:9])
+# ax = sns.barplot(x = 'title', y = 'viewCount', data= videos_data.sort_values('viewCount',ascending=False)[0:9])
 # plot = ax.set_xticklabels(ax.get_xticklabels(), rotation=90)
-ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:,.0f} k'.format(x / 1000)))
+# ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:,.0f}'.format(x/1000) + 'K'))
+
+sns.violinplot(videos_data['channelTitle'],videos_data['viewCount'])
 plt.show()
+
+
 
